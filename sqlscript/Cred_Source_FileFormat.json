@@ -1,5 +1,5 @@
 {
-	"name": "Tutorial",
+	"name": "Cred_Source_FileFormat",
 	"properties": {
 		"content": {
 			"query": " \n-------------------------------\n--------CREDENTIALS------------\n-------------------------------\n\nCREATE DATABASE SCOPED CREDENTIAL rachitcreds\nWITH \n    IDENTITY = 'managed identity';\n\n\n------------------------------\n-----CREATE EXTERNAL SOURCE\n------------------------------\n\nCREATE EXTERNAL DATA SOURCE raw_ext_source\nWITH \n    (\n        LOCATION = 'abfss://synapse@mystorageaccountrachit.dfs.core.windows.net/',\n        CREDENTIAL= rachitcreds\n    )\n\n\n------------------------------\n-----CREATE FILE FORMAT\n------------------------------\n\nCREATE EXTERNAL FILE FORMAT csv_format\nWITH \n    (\n        FORMAT_TYPE=DELIMITEDTEXT,\n        FORMAT_OPTIONS(\n                       FIELD_TERMINATOR = ''\n        )\n\n    )\n\n-------------------------------\n----- OPENROWSET FUNCTION------\n-------------------------------\n\nSELECT * FROM \nOPENROWSET(\n    BULK 'bronze',\n    DATA_SOURCE= 'raw_ext_source',\n    FORMAT='CSV',\n    PARSER_VERSION='2.0',\n    HEADER_ROW = TRUE\n) as [result]\n",
