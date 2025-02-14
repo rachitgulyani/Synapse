@@ -1,0 +1,189 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"workspaceName": {
+			"type": "string",
+			"metadata": "Workspace name",
+			"defaultValue": "synapse-workspace-aw-project"
+		},
+		"synapse-workspace-aw-project-WorkspaceDefaultSqlServer_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'synapse-workspace-aw-project-WorkspaceDefaultSqlServer'",
+			"defaultValue": "Integrated Security=False;Encrypt=True;Connection Timeout=30;Data Source=tcp:synapse-workspace-aw-project.sql.azuresynapse.net,1433;Initial Catalog=@{linkedService().DBName}"
+		},
+		"synapse-workspace-aw-project-WorkspaceDefaultStorage_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://defaultsynpasestorage.dfs.core.windows.net"
+		}
+	},
+	"variables": {
+		"workspaceId": "[concat('Microsoft.Synapse/workspaces/', parameters('workspaceName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('workspaceName'), '/synapse-workspace-aw-project-WorkspaceDefaultSqlServer')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"parameters": {
+					"DBName": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"type": "AzureSqlDW",
+				"typeProperties": {
+					"connectionString": "[parameters('synapse-workspace-aw-project-WorkspaceDefaultSqlServer_connectionString')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/synapse-workspace-aw-project-WorkspaceDefaultStorage')]",
+			"type": "Microsoft.Synapse/workspaces/linkedServices",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('synapse-workspace-aw-project-WorkspaceDefaultStorage_properties_typeProperties_url')]"
+				},
+				"connectVia": {
+					"referenceName": "AutoResolveIntegrationRuntime",
+					"type": "IntegrationRuntimeReference"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('workspaceId'), '/integrationRuntimes/AutoResolveIntegrationRuntime')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/AutoResolveIntegrationRuntime')]",
+			"type": "Microsoft.Synapse/workspaces/integrationRuntimes",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "Managed",
+				"typeProperties": {
+					"computeProperties": {
+						"location": "AutoResolve",
+						"dataFlowProperties": {
+							"computeType": "General",
+							"coreCount": 8,
+							"timeToLive": 0
+						}
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/WorkspaceSystemIdentity')]",
+			"type": "Microsoft.Synapse/workspaces/credentials",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"type": "ManagedIdentity",
+				"typeProperties": {}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create schema')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "CREATE SCHEMA gold;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "awdatabase",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Create views')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "\n--Create calendar view\nCREATE VIEW gold.Calendar AS\nSELECT \n    * \nFROM \nOPENROWSET(\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/calendar/',\n    FORMAT='parquet'\n) AS Calendar;\n\n\n\n--Create customer view\nCREATE VIEW gold.customers AS\nSELECT * FROM \nOPENROWSET(\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/customers',\n    FORMAT='parquet'\n) as  customers;\n\n\nCREATE VIEW gold.product_categories AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/procat',\n    FORMAT='parquet'\n) as procat;\n\n\nCREATE VIEW gold.product AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/product',\n    FORMAT='parquet'\n) as product;\n\n\nCREATE VIEW gold.product_subcategories AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/prosubcat',\n    FORMAT='parquet'\n) as prosubcat;\n\n\nCREATE VIEW gold.returns AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/returns',\n    FORMAT='parquet'\n) as returns1;\n\n\nCREATE VIEW gold.sales AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/sales',\n    FORMAT='parquet'\n) as sales;\n\n\nCREATE VIEW gold.territory AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/territory',\n    FORMAT='parquet'\n) as territory;",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "awdatabase",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/CreateExternalTables')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "DROP EXTERNAL TABLE REVENUE;\nCREATE EXTERNAL TABLE REVENUE(\n    Dealer_ID   varchar(4000) ,  -- Foreign Key to Dealer Dimension\n    Model_ID    varchar(4000),  -- Foreign Key to Model Dimension\n    Branch_ID   varchar(4000),  -- Foreign Key to Branch Dimension\n    Date_ID     varchar(4000) ,  -- Foreign Key to Date Dimension\n    Units_Sold  BIGINT ,  -- Number of units sold\n    Revenue     BIGINT\n)\nWITH \n(\n    LOCATION='bronze',\n    DATA_SOURCE=raw_ext_source,\n    FILE_FORMAT=csv_ff\n)\n\nSELECT * FROM REVENUE;\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "awdatabase",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/Cred_Source_FileFormat')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": " \n-------------------------------\n--------CREDENTIALS------------\n-------------------------------\n\nCREATE DATABASE SCOPED CREDENTIAL rachitcreds\nWITH \n    IDENTITY = 'managed identity';\n\n\n------------------------------\n-----CREATE EXTERNAL SOURCE\n------------------------------\n\nCREATE EXTERNAL DATA SOURCE raw_ext_source\nWITH \n    (\n        LOCATION = 'abfss://synapse@mystorageaccountrachit.dfs.core.windows.net/',\n        CREDENTIAL= rachitcreds\n    )\n\n\n------------------------------\n-----CREATE FILE FORMAT\n------------------------------\n\nCREATE EXTERNAL FILE FORMAT csv_format\nWITH \n    (\n        FORMAT_TYPE=DELIMITEDTEXT,\n        FORMAT_OPTIONS(\n                       FIELD_TERMINATOR = ''\n        )\n\n    )\n\n-------------------------------\n----- OPENROWSET FUNCTION------\n-------------------------------\n\nSELECT * FROM \nOPENROWSET(\n    BULK 'bronze',\n    DATA_SOURCE= 'raw_ext_source',\n    FORMAT='CSV',\n    PARSER_VERSION='2.0',\n    HEADER_ROW = TRUE\n) as [result]\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "awdatabase",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('workspaceName'), '/RachitDedicatedSQLPool')]",
+			"type": "Microsoft.Synapse/workspaces/sqlPools",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"collation": "SQL_Latin1_General_CP1_CI_AS",
+				"maxSizeBytes": 263882790666240,
+				"annotations": []
+			},
+			"dependsOn": [],
+			"location": "centralindia"
+		}
+	]
+}
