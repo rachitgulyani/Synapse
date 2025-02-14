@@ -1,0 +1,17 @@
+{
+	"name": "CopyInto",
+	"properties": {
+		"content": {
+			"query": "\n-------------------------------\n--------CREDENTIALS------------\n-------------------------------\n\nCREATE DATABASE SCOPED CREDENTIAL rachitcreds\nWITH \n    IDENTITY = 'managed identity';\n\n\n------------------------------\n-----CREATE EXTERNAL SOURCE\n------------------------------\n\nCREATE EXTERNAL DATA SOURCE raw_ext_source\nWITH \n    (\n        LOCATION = 'abfss://synapse@mystorageaccountrachit.dfs.core.windows.net/',\n        CREDENTIAL= rachitcreds\n    )\n\n\n------------------------------\n-----CREATE FILE FORMAT\n------------------------------\n\nCREATE EXTERNAL FILE FORMAT csv_format\nWITH \n    (\n        FORMAT_TYPE=DELIMITEDTEXT,\n        FORMAT_OPTIONS(\n                       FIELD_TERMINATOR = ','\n        )\n\n    )\n\n\n---------------------------------\n--CREATE PARQUET FILE FORMAT-----\n---------------------------------\n\nCREATE EXTERNAL FILE FORMAT parquet_format\nWITH\n    (\n    FORMAT_TYPE=PARQUET,\n    DATA_COMPRESSION='org.apache.hadoop.io.compress.SnappyCodec'\n    )\n\n------------------\n--create sql table\n------------------\n\n\nCREATE TABLE COPY_INTO_TABLE\n(\n    Dealer_ID VARCHAR(4000),\n    Model_ID VARCHAR (4000),\n    Branch_ID VARCHAR(4000),\n    Date_ID VARCHAR(4000),\n    Units_Sold BIGINT,\n    Revenue BIGINT\n)\nWITH\n    (\n    DISTRIBUTION=ROUND_ROBIN\n    )\n\n\nCOPY INTO COPY_INTO_TABLE\n(\n    Dealer_ID 1,\n    Model_ID 2,\n    Branch_ID 3, \n    Date_ID 4,\n    Units_Sold 5,\n    Revenue 6\n)\nFROM 'https://mystorageaccountrachit.dfs.core.windows.net/synapse/revenue_cetas/'\nWITH \n    (\n        FILE_TYPE='PARQUET',\n        CREDENTIAL= (IDENTITY='managed identity')\n    );\n\n\nSELECT * FROM COPY_INTO_TABLE;\n\n\n",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "RachitDedicatedSQLPool",
+				"poolName": "RachitDedicatedSQLPool"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
