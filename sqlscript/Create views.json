@@ -1,0 +1,17 @@
+{
+	"name": "Create views",
+	"properties": {
+		"content": {
+			"query": "\n--Create calendar view\nCREATE VIEW gold.Calendar AS\nSELECT \n    * \nFROM \nOPENROWSET(\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/calendar/',\n    FORMAT='parquet'\n) AS Calendar;\n\n\n\n--Create customer view\nCREATE VIEW gold.customers AS\nSELECT * FROM \nOPENROWSET(\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/customers',\n    FORMAT='parquet'\n) as  customers;\n\n\nCREATE VIEW gold.product_categories AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/procat',\n    FORMAT='parquet'\n) as procat;\n\n\nCREATE VIEW gold.product AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/product',\n    FORMAT='parquet'\n) as product;\n\n\nCREATE VIEW gold.product_subcategories AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/prosubcat',\n    FORMAT='parquet'\n) as prosubcat;\n\n\nCREATE VIEW gold.returns AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/returns',\n    FORMAT='parquet'\n) as returns1;\n\n\nCREATE VIEW gold.sales AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/sales',\n    FORMAT='parquet'\n) as sales;\n\n\nCREATE VIEW gold.territory AS\nSELECT *\nFROM \nOPENROWSET (\n    BULK 'https://mystorageaccountrachit.dfs.core.windows.net/myproject/silver/territory',\n    FORMAT='parquet'\n) as territory;",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "awdatabase",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
