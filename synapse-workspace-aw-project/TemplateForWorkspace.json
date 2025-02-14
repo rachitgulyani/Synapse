@@ -94,6 +94,26 @@
 			"dependsOn": []
 		},
 		{
+			"name": "[concat(parameters('workspaceName'), '/CETAS')]",
+			"type": "Microsoft.Synapse/workspaces/sqlscripts",
+			"apiVersion": "2019-06-01-preview",
+			"properties": {
+				"content": {
+					"query": "CREATE EXTERNAL TABLE REVENUE_CETAS\nWITH\n    (\n        LOCATION='revenue_cetas',\n        DATA_SOURCE=raw_ext_source,\n        FILE_FORMAT=parquet_format\n    )\nAS\nSELECT * FROM\nOPENROWSET(\n    BULK 'bronze',\n    DATA_SOURCE='raw_ext_source',\n    FORMAT='CSV',\n    HEADER_ROW=TRUE,\n    PARSER_VERSION='2.0'\n) as query1\n\n---------------------------------\n-----CREATE VIEW-----------------\n---------------------------------\n\nCREATE VIEW REVENUE_VW\nAS\nSELECT * FROM \nOPENROWSET(\n    BULK 'revenue_cetas',\n    DATA_SOURCE='raw_ext_source',\n    FORMAT='PARQUET'\n) AS QUERY1\n",
+					"metadata": {
+						"language": "sql"
+					},
+					"currentConnection": {
+						"databaseName": "awdatabase",
+						"poolName": "Built-in"
+					},
+					"resultLimit": 5000
+				},
+				"type": "SqlQuery"
+			},
+			"dependsOn": []
+		},
+		{
 			"name": "[concat(parameters('workspaceName'), '/Create schema')]",
 			"type": "Microsoft.Synapse/workspaces/sqlscripts",
 			"apiVersion": "2019-06-01-preview",
@@ -139,7 +159,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"content": {
-					"query": "DROP EXTERNAL TABLE REVENUE;\nCREATE EXTERNAL TABLE REVENUE(\n    Dealer_ID   varchar(4000) ,  -- Foreign Key to Dealer Dimension\n    Model_ID    varchar(4000),  -- Foreign Key to Model Dimension\n    Branch_ID   varchar(4000),  -- Foreign Key to Branch Dimension\n    Date_ID     varchar(4000) ,  -- Foreign Key to Date Dimension\n    Units_Sold  BIGINT ,  -- Number of units sold\n    Revenue     BIGINT\n)\nWITH \n(\n    LOCATION='bronze',\n    DATA_SOURCE=raw_ext_source,\n    FILE_FORMAT=csv_ff\n)\n\nSELECT * FROM REVENUE;\n",
+					"query": "CREATE EXTERNAL TABLE REVENUE(\n    Dealer_ID   varchar(4000) ,  -- Foreign Key to Dealer Dimension\n    Model_ID    varchar(4000),  -- Foreign Key to Model Dimension\n    Branch_ID   varchar(4000),  -- Foreign Key to Branch Dimension\n    Date_ID     varchar(4000) ,  -- Foreign Key to Date Dimension\n    Units_Sold  BIGINT ,  -- Number of units sold\n    Revenue     BIGINT\n)\nWITH \n(\n    LOCATION='bronze',\n    DATA_SOURCE=raw_ext_source,\n    FILE_FORMAT=csv_ff\n)\n\nSELECT * FROM REVENUE;\n",
 					"metadata": {
 						"language": "sql"
 					},
@@ -159,7 +179,7 @@
 			"apiVersion": "2019-06-01-preview",
 			"properties": {
 				"content": {
-					"query": " \n-------------------------------\n--------CREDENTIALS------------\n-------------------------------\n\nCREATE DATABASE SCOPED CREDENTIAL rachitcreds\nWITH \n    IDENTITY = 'managed identity';\n\n\n------------------------------\n-----CREATE EXTERNAL SOURCE\n------------------------------\n\nCREATE EXTERNAL DATA SOURCE raw_ext_source\nWITH \n    (\n        LOCATION = 'abfss://synapse@mystorageaccountrachit.dfs.core.windows.net/',\n        CREDENTIAL= rachitcreds\n    )\n\n\n------------------------------\n-----CREATE FILE FORMAT\n------------------------------\n\nCREATE EXTERNAL FILE FORMAT csv_format\nWITH \n    (\n        FORMAT_TYPE=DELIMITEDTEXT,\n        FORMAT_OPTIONS(\n                       FIELD_TERMINATOR = ''\n        )\n\n    )\n\n-------------------------------\n----- OPENROWSET FUNCTION------\n-------------------------------\n\nSELECT * FROM \nOPENROWSET(\n    BULK 'bronze',\n    DATA_SOURCE= 'raw_ext_source',\n    FORMAT='CSV',\n    PARSER_VERSION='2.0',\n    HEADER_ROW = TRUE\n) as [result]\n",
+					"query": " \n-------------------------------\n--------CREDENTIALS------------\n-------------------------------\n\nCREATE DATABASE SCOPED CREDENTIAL rachitcreds\nWITH \n    IDENTITY = 'managed identity';\n\n\n------------------------------\n-----CREATE EXTERNAL SOURCE\n------------------------------\n\nCREATE EXTERNAL DATA SOURCE raw_ext_source\nWITH \n    (\n        LOCATION = 'abfss://synapse@mystorageaccountrachit.dfs.core.windows.net/',\n        CREDENTIAL= rachitcreds\n    )\n\n\n------------------------------\n-----CREATE FILE FORMAT\n------------------------------\n\nCREATE EXTERNAL FILE FORMAT csv_format\nWITH \n    (\n        FORMAT_TYPE=DELIMITEDTEXT,\n        FORMAT_OPTIONS(\n                       FIELD_TERMINATOR = ''\n        )\n\n    )\n\n-------------------------------\n----- OPENROWSET FUNCTION------\n-------------------------------\n\nSELECT * FROM \nOPENROWSET(\n    BULK 'bronze',\n    DATA_SOURCE= 'raw_ext_source',\n    FORMAT='CSV',\n    PARSER_VERSION='2.0',\n    HEADER_ROW = TRUE\n) as [result];\n\n\n\n---------------------------------\n--CREATE PARQUET FILE FORMAT-----\n---------------------------------\n\nCREATE EXTERNAL FILE FORMAT parquet_format\nWITH\n    (\n    FORMAT_TYPE=PARQUET,\n    DATA_COMPRESSION='org.apache.hadoop.io.compress.SnappyCodec'\n    )\n\n\n",
 					"metadata": {
 						"language": "sql"
 					},
