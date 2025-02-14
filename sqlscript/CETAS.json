@@ -2,12 +2,12 @@
 	"name": "CETAS",
 	"properties": {
 		"content": {
-			"query": "CREATE EXTERNAL TABLE REVENUE_CETAS\nWITH\n    (\n        LOCATION='revenue_cetas',\n        DATA_SOURCE=raw_ext_source,\n        FILE_FORMAT=csv_ff,\n\n    )",
+			"query": "CREATE EXTERNAL TABLE REVENUE_CETAS\nWITH\n    (\n        LOCATION='revenue_cetas',\n        DATA_SOURCE=raw_ext_source,\n        FILE_FORMAT=parquet_format\n    )\nAS\nSELECT * FROM\nOPENROWSET(\n    BULK 'bronze',\n    DATA_SOURCE='raw_ext_source',\n    FORMAT='CSV',\n    HEADER_ROW=TRUE,\n    PARSER_VERSION='2.0'\n) as query1\n\n---------------------------------\n-----CREATE VIEW-----------------\n---------------------------------\n\nCREATE VIEW REVENUE_VW\nAS\nSELECT * FROM \nOPENROWSET(\n    BULK 'revenue_cetas',\n    DATA_SOURCE='raw_ext_source',\n    FORMAT='PARQUET'\n) AS QUERY1\n",
 			"metadata": {
 				"language": "sql"
 			},
 			"currentConnection": {
-				"databaseName": "master",
+				"databaseName": "awdatabase",
 				"poolName": "Built-in"
 			},
 			"resultLimit": 5000

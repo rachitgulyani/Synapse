@@ -2,7 +2,7 @@
 	"name": "CreateExternalTables",
 	"properties": {
 		"content": {
-			"query": "DROP EXTERNAL TABLE REVENUE;\nCREATE EXTERNAL TABLE REVENUE(\n    Dealer_ID   varchar(4000) ,  -- Foreign Key to Dealer Dimension\n    Model_ID    varchar(4000),  -- Foreign Key to Model Dimension\n    Branch_ID   varchar(4000),  -- Foreign Key to Branch Dimension\n    Date_ID     varchar(4000) ,  -- Foreign Key to Date Dimension\n    Units_Sold  BIGINT ,  -- Number of units sold\n    Revenue     BIGINT\n)\nWITH \n(\n    LOCATION='bronze',\n    DATA_SOURCE=raw_ext_source,\n    FILE_FORMAT=csv_ff\n)\n\nSELECT * FROM REVENUE;\n",
+			"query": "CREATE EXTERNAL TABLE REVENUE(\n    Dealer_ID   varchar(4000) ,  -- Foreign Key to Dealer Dimension\n    Model_ID    varchar(4000),  -- Foreign Key to Model Dimension\n    Branch_ID   varchar(4000),  -- Foreign Key to Branch Dimension\n    Date_ID     varchar(4000) ,  -- Foreign Key to Date Dimension\n    Units_Sold  BIGINT ,  -- Number of units sold\n    Revenue     BIGINT\n)\nWITH \n(\n    LOCATION='bronze',\n    DATA_SOURCE=raw_ext_source,\n    FILE_FORMAT=csv_ff\n)\n\nSELECT * FROM REVENUE;\n",
 			"metadata": {
 				"language": "sql"
 			},
