@@ -1,0 +1,17 @@
+{
+	"name": "CETAS",
+	"properties": {
+		"content": {
+			"query": "CREATE EXTERNAL TABLE REVENUE_CETAS\nWITH\n    (\n        LOCATION='revenue_cetas',\n        DATA_SOURCE=raw_ext_source,\n        FILE_FORMAT=csv_ff,\n\n    )",
+			"metadata": {
+				"language": "sql"
+			},
+			"currentConnection": {
+				"databaseName": "master",
+				"poolName": "Built-in"
+			},
+			"resultLimit": 5000
+		},
+		"type": "SqlQuery"
+	}
+}
